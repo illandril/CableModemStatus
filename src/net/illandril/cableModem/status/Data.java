@@ -1,23 +1,25 @@
 package net.illandril.cableModem.status;
 
-import java.time.LocalDateTime;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 abstract class Data {
     private final static DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern( "yyyy.MM.dd.HH.mm.ss" );
     
-    private final LocalDateTime time;
+    private final ZonedDateTime time;
     private final int channel;
     private Integer channelID = null;
     private Float frequencyMHz = null;
     private Float powerdBmV = null;
     
-    Data( LocalDateTime time, int channel ) {
+    Data( ZonedDateTime time, int channel ) {
         this.time = time;
         this.channel = channel;
     }
     
-    public final LocalDateTime getTime() {
+    public final ZonedDateTime getTime() {
         return time;
     }
     
@@ -27,6 +29,10 @@ abstract class Data {
     
     public final String getChannelString() {
         return Integer.toString( channel );
+    }
+    
+    public final int getChannel() {
+        return channel;
     }
     
     public final void setChannelID( Integer channelID ) {
@@ -45,6 +51,9 @@ abstract class Data {
         }
     }
     
+    public final Integer getChannelID() {
+        return channelID;
+    }
     public final String getChannelIDString() {
         return channelID == null ? "" : channelID.toString();
     }
@@ -84,8 +93,16 @@ abstract class Data {
         return frequencyMHz == null ? "" : frequencyMHz.toString();
     }
     
+    public final Float getFrequencyMHz() {
+        return frequencyMHz;
+    }
+    
     public final void setPowerdBmV( Float power ) {
         this.powerdBmV = power;
+    }
+    
+    public final Float getPowerdBmV() {
+        return powerdBmV;
     }
     
     public final void setPower( String power ) {
@@ -108,5 +125,29 @@ abstract class Data {
     
     public final String getPowerdBmVString() {
         return powerdBmV == null ? "" : powerdBmV.toString();
+    }
+    
+    protected final static void setInteger( PreparedStatement stmt, int index, Integer value ) throws SQLException {
+        if ( value == null ) {
+            stmt.setNull( index, java.sql.Types.INTEGER );
+        } else {
+            stmt.setInt( index, value.intValue() );
+        }
+    }
+    
+    protected final static void setFloat( PreparedStatement stmt, int index, Float value ) throws SQLException {
+        if ( value == null ) {
+            stmt.setNull( index, java.sql.Types.FLOAT );
+        } else {
+            stmt.setFloat( index, value.floatValue() );
+        }
+    }
+    
+    protected final static void setLong( PreparedStatement stmt, int index, Long value ) throws SQLException {
+        if ( value == null ) {
+            stmt.setNull( index, java.sql.Types.BIGINT );
+        } else {
+            stmt.setLong( index, value.longValue() );
+        }
     }
 }

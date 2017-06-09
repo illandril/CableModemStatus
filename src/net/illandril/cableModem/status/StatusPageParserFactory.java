@@ -7,6 +7,7 @@ public class StatusPageParserFactory {
     
     public final static StatusPageParser get( String statusPageHTML ) {
         if ( statusPageHTML.indexOf( "Touchstone Status" ) != -1 ) {
+            // Also works for ArrisTM1602AP2
             return ArrisTG1682G;
         } else if ( statusPageHTML.indexOf( "signaldata.html" ) != -1 ) {
             return ArrisSB6141;

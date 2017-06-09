@@ -1,6 +1,6 @@
 package net.illandril.cableModem.status;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -8,7 +8,7 @@ import java.util.List;
 public class ArrisSB6141 extends StatusPageParser {
     
     @Override
-    public StatusPageData parse( LocalDateTime statusPageRequestTime, String statusPageHTML ) {
+    public StatusPageData parse( ZonedDateTime statusPageRequestTime, String statusPageHTML ) {
         StatusPageData pageData = new StatusPageData();
         boolean inDownstream = false;
         boolean inUpstream = false;

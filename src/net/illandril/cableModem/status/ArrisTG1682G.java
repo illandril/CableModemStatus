@@ -1,11 +1,12 @@
 package net.illandril.cableModem.status;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 public class ArrisTG1682G extends StatusPageParser {
+    // Also works for ArrisTM1602AP2
     
     @Override
-    public StatusPageData parse( LocalDateTime statusPageRequestTime, String statusPageHTML ) {
+    public StatusPageData parse( ZonedDateTime statusPageRequestTime, String statusPageHTML ) {
         StatusPageData pageData = new StatusPageData();
         for ( String line : statusPageHTML.split( "\n" ) ) {
             if ( line.indexOf( "Downstream 1" ) != -1 ) {

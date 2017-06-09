@@ -2,7 +2,11 @@ package net.illandril.cableModem.status;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.time.LocalDateTime;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.ZonedDateTime;
 
 public class DownstreamData extends Data {
     private String lockStatus = null;
@@ -12,7 +16,7 @@ public class DownstreamData extends Data {
     private Long uncorrectables = null;
     private Long octets = null;
     
-    public DownstreamData( LocalDateTime time, int channel ) {
+    public DownstreamData( ZonedDateTime time, int channel ) {
         super( time, channel );
     }
     
@@ -36,6 +40,10 @@ public class DownstreamData extends Data {
         }
     }
     
+    public final Long getCorrecteds() {
+        return correcteds;
+    }
+    
     public final void setUncorrectables( Long uncorrectables ) {
         this.uncorrectables = uncorrectables;
     }
@@ -50,6 +58,10 @@ public class DownstreamData extends Data {
                 System.err.println( "Couldn't parse uncorrectables[" + uncorrectables + "]" );
             }
         }
+    }
+    
+    public final Long getUncorrectables() {
+        return uncorrectables;
     }
     
     public final void setOctets( Long octets ) {
@@ -90,12 +102,64 @@ public class DownstreamData extends Data {
         }
     }
     
+    public final Float getSNRdB() {
+        return snrdB;
+    }
+    
     public final void setModulation( String modulation ) {
         this.modulation = modulation;
     }
     
     public final static void writeHeader( Writer out ) throws IOException {
         out.write( "down,Time,Channel,Lock Status,Modulation,Channel ID,Frequency (Hz),Power (dBmV),SNR (dB),Correcteds,Uncorrectables,Octets\n" );
+    }
+
+    public final static void initDBTable( Connection conn ) throws SQLException {
+        Statement statement = conn.createStatement();
+        statement.execute( "CREATE TABLE IF NOT EXISTS downstream ( id integer PRIMARY KEY,"
+                + "time datetime,"
+                + "channel integer,"
+                + "lockStatus text,"
+                + "modulation text,"
+                + "channelID integer,"
+                + "frequency float,"
+                + "power float,"
+                + "snr float,"
+                + "correcteds bigint,"
+                + "uncorrectables bigint,"
+                + "octets bigint );" );
+        
+        statement = conn.createStatement();
+        statement.execute( "create index if not exists dtimeIndex on downstream (time);" );
+    }
+    
+    public final void write( Connection conn ) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement( "INSERT INTO downstream ( "
+                + "time,"
+                + "channel,"
+                + "lockStatus,"
+                + "modulation,"
+                + "channelID,"
+                + "frequency,"
+                + "power,"
+                + "snr,"
+                + "correcteds,"
+                + "uncorrectables,"
+                + "octets )"
+                + " VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? );" );
+        
+        statement.setTimestamp( 1, java.sql.Timestamp.valueOf( getTime().toLocalDateTime() ) );
+        statement.setInt( 2, getChannel() );
+        statement.setString( 3, lockStatus );
+        statement.setString( 4, modulation );
+        setInteger( statement, 5, getChannelID() );
+        setFloat( statement, 6, getFrequencyMHz() );
+        setFloat( statement, 7, getPowerdBmV() );
+        setFloat( statement, 8, snrdB );
+        setLong( statement, 9, correcteds );
+        setLong( statement, 10, uncorrectables );
+        setLong( statement, 11, octets );
+        statement.executeUpdate();
     }
     
     public final void write( Writer out ) throws IOException {

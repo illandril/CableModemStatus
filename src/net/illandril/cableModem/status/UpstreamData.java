@@ -2,7 +2,11 @@ package net.illandril.cableModem.status;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.time.LocalDateTime;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.time.ZonedDateTime;
 
 public class UpstreamData extends Data {
     private String lockStatus = null;
@@ -10,7 +14,7 @@ public class UpstreamData extends Data {
     private Integer symbolRatekSyms = null;
     private String modulation = null;
     
-    public UpstreamData( LocalDateTime time, int channel ) {
+    public UpstreamData( ZonedDateTime time, int channel ) {
         super( time, channel );
     }
     
@@ -57,6 +61,48 @@ public class UpstreamData extends Data {
     
     public final static void writeHeader( Writer out ) throws IOException {
         out.write( "up,Time,Channel,Lock Status,US Channel Type,Channel ID,Symbol Rate (kSym/s),Frequency (Hz),Power (dBmV),Modulation\n" );
+    }
+    
+    public final static void initDBTable( Connection conn ) throws SQLException {
+        Statement statement = conn.createStatement();
+        statement.execute( "CREATE TABLE IF NOT EXISTS upstream ( id integer PRIMARY KEY,"
+                + "time datetime,"
+                + "channel integer,"
+                + "lockStatus text,"
+                + "usChannelType text,"
+                + "channelID integer,"
+                + "symbolRate integer,"
+                + "frequency float,"
+                + "power float,"
+                + "modulation text );" );
+        
+        statement = conn.createStatement();
+        statement.execute( "create index if not exists utimeIndex on upstream (time);" );
+    }
+    
+    public final void write( Connection conn ) throws SQLException {
+        PreparedStatement statement = conn.prepareStatement( "INSERT INTO upstream ( "
+                + "time,"
+                + "channel,"
+                + "lockStatus,"
+                + "usChannelType,"
+                + "channelID,"
+                + "symbolRate,"
+                + "frequency,"
+                + "power,"
+                + "modulation )"
+                + " VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? );" );
+        
+        statement.setTimestamp( 1, java.sql.Timestamp.valueOf( getTime().toLocalDateTime() ) );
+        statement.setInt( 2, getChannel() );
+        statement.setString( 3, lockStatus );
+        statement.setString( 4, usChannelType );
+        setInteger( statement, 5, getChannelID() );
+        setInteger( statement, 6, symbolRatekSyms );
+        setFloat( statement, 7, getFrequencyMHz() );
+        setFloat( statement, 8, getPowerdBmV() );
+        statement.setString( 9, modulation );
+        statement.executeUpdate();
     }
     
     public final void write( Writer out ) throws IOException {
